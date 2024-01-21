@@ -1,3 +1,4 @@
+const searchUser = 
 //JavaScript will start loading and displaying once html dom is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -24,12 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p>GitHub: <a href="${data.html_url}" target="_blank">${data.login}</a></p>
                     ${renderSocialLinks(data)}
                 `;
+                getRepos(defaultUsername);
 
                 //hidding loader once process is done
                 const loaderElement = document.querySelector('.loader-container');
                 if (loaderElement) {
                     loaderElement.style.display = 'none';
                 }
+                
+
             };
 
             //social links
@@ -49,13 +53,39 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => console.error('Error:', error));
 
-        //display all the
+        //display all the repositories
+        const getRepos = async (username) => {
+            const response = await fetch(`https://api.github.com/users/${username}/repos`);
+            const reposData = await response.json();
+            console.log(reposData);
+            
+            const repositoriesContainer = document.getElementById('repositories');
+            reposData.forEach(repository => {
+                
+                const repositoryElement = document.createElement('div');
+                repositoryElement.classList.add('repository');
+                repositoryElement.innerHTML = `<h3>${repository.name}</h3>`;
+                repositoryElement.innerHTML += `<p class="description">${repository.description || 'No description available'}</p>`;
+            
+                const languages = async function(owner, repoName){
+                    // console.log(owner);
+                    const response = await fetch(`https://api.github.com/repos/${owner}/${repoName}/languages`);
+                    const allLanguages = await response.json();
+                    console.log(allLanguages)
+                    repositoryElement.innerHTML += `<p class="lang">${Object.keys(allLanguages).join('</p><p class="lang">') || "Not Defined"}</p>`;
+                }
+                // console.log(repository.owner.login, repository.name);
+                languages(repository.owner.login, repository.name);
+
+                repositoriesContainer.appendChild(repositoryElement);
+            });
+        }
+        
         
         //display loader while processing
         function showLoader() {
             const repositoriesContainer = document.getElementById('repositories');
             repositoriesContainer.innerHTML = ''; // Clear existing content
-        
             const loaderContainer = document.createElement('div');
             loaderContainer.classList.add('loader-container');
             loaderContainer.innerHTML = '<div class="loader"></div>';
